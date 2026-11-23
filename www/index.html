@@ -1,0 +1,53 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Alpine on Hostless</title>
+  <style>
+    :root { color-scheme: dark light; }
+    body { font: 15px/1.6 ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+           margin: 0; padding: 2.5rem 1.5rem; background: #0b0f14; color: #d7e0ea; }
+    main { max-width: 760px; margin: 0 auto; }
+    h1 { font-size: 1.35rem; margin: 0 0 .25rem; color: #7ee787; }
+    .sub { color: #6e7d8f; margin: 0 0 2rem; font-size: .85rem; }
+    table { border-collapse: collapse; width: 100%; margin: 0 0 1.5rem; }
+    td { padding: .35rem .5rem; border-bottom: 1px solid #1c2530; vertical-align: top; }
+    td:first-child { color: #6e7d8f; white-space: nowrap; width: 11rem; }
+    code { color: #79c0ff; }
+    .ok { color: #7ee787; }
+    a { color: #58a6ff; }
+    footer { color: #4d5967; font-size: .8rem; border-top: 1px solid #1c2530; padding-top: 1rem; }
+  </style>
+</head>
+<body>
+<main>
+  <h1>Alpine on Hostless</h1>
+  <p class="sub">busybox httpd · read-only rootfs · single replica · 0.1 vCPU / 128 MiB</p>
+
+  <table>
+    <tr><td>base image</td><td id="base">alpine</td></tr>
+    <tr><td>server</td><td>busybox httpd</td></tr>
+    <tr><td>pid 1</td><td><code>entrypoint.sh → httpd -f</code></td></tr>
+    <tr><td>port</td><td>from <code>$PORT</code></td></tr>
+    <tr><td>filesystem</td><td>read-only root, writable <code>/tmp</code> <code>/root</code> <code>/app/.cache</code></td></tr>
+    <tr><td>health check</td><td>tcp probe, 10s interval</td></tr>
+    <tr><td>uptime</td><td id="up">—</td></tr>
+    <tr><td>server time</td><td id="time">—</td></tr>
+  </table>
+
+  <p>这个站点的目的是验证 <strong>Hostless 能不能用 Alpine 做基础镜像</strong>。能。</p>
+  <p>镜像里只有 <code>alpine:3.21</code> + <code>busybox-extras</code> + <code>ca-certificates</code> + <code>tzdata</code>，不到 15 MB。</p>
+
+  <footer>Hostless · Alpine POC · <a href="/cgi-bin/healthz">/cgi-bin/healthz</a></footer>
+</main>
+<script>
+  fetch('/cgi-bin/healthz').then(r => r.json()).then(j => {
+    document.getElementById('base').textContent = j.alpine;
+    document.getElementById('base').className = 'ok';
+    document.getElementById('up').textContent = j.uptime_s + 's';
+    document.getElementById('time').textContent = j.now;
+  }).catch(() => {});
+</script>
+</body>
+</html>
