@@ -1,15 +1,16 @@
 FROM alpine:3.21
 
-# busybox-extras 提供 httpd 的 CGI 能力；tzdata 让容器时间是本地时区
-RUN apk add --no-cache busybox-extras ca-certificates tzdata \
- && adduser -D -H -s /sbin/nologin app 2>/dev/null || true
+# darkhttpd 是 Alpine 里最省事的静态服务器：单二进制、支持 --port/--addr。
+# 注意：alpine 的 busybox 不带 httpd applet（会报 "httpd: applet not found"），
+# busybox-extras 也不提供它 —— 别再试 busybox httpd。
+RUN apk add --no-cache darkhttpd ca-certificates tzdata
 
 ENV PORT=8080 \
     TZ=Asia/Shanghai
 
 COPY www/ /www/
 COPY entrypoint.sh /entrypoint.sh
-RUN chmod 0755 /entrypoint.sh /www/cgi-bin/* 2>/dev/null || true
+RUN chmod 0755 /entrypoint.sh
 
 EXPOSE 8080
 CMD ["/entrypoint.sh"]
