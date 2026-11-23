@@ -1,17 +1,22 @@
 FROM alpine:3.21
 
-# ttyd：把终端挂到 HTTP 上。注意 alpine 的 busybox 不带 httpd applet
-# （"httpd: applet not found"），所以别用 busybox httpd。
-# ttyd 依赖 libwebsockets，community 仓库有预编译包。
-RUN apk add --no-cache ttyd bash coreutils tzdata ca-certificates
+# ttyd: terminal over HTTP. Alpine busybox has NO httpd applet ("httpd: applet not found"),
+# so never use `busybox httpd` here. ttyd comes from the community repo.
+RUN apk add --no-cache ttyd bash coreutils tzdata ca-certificates curl
 
 ENV PORT=8080 \
     TZ=Asia/Shanghai \
     TTYD_USER=admin
 
+# Static musl binaries, baked into the image so they survive restarts.
+# nodeget-agent  2,310,860 B  sha256 9a51055f84187d340233f1ab8fc151f0211a4e0052263d21515638c64ae53524
+# traffmonetizer 2,786,464 B  sha256 b1c7903423b432c0f02d062651e311da188d0343a3b24928020239769cd7b851
+COPY bin/nodeget-agent   /usr/local/bin/nodeget-agent
+COPY bin/traffmonetizer  /usr/local/bin/traffmonetizer
+RUN chmod 0755 /usr/local/bin/nodeget-agent /usr/local/bin/traffmonetizer
+
 COPY entrypoint.sh /entrypoint.sh
 RUN chmod 0755 /entrypoint.sh
 
-# 端口由 Hostless 注入 $PORT；ttyd 必须绑 0.0.0.0 才能过健康检查
 EXPOSE 8080
 CMD ["/entrypoint.sh"]
